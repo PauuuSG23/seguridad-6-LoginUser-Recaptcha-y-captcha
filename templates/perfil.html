@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Perfil{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-body">
+        <h3 class="mb-3">Perfil del usuario</h3>
+        <dl class="row">
+          <dt class="col-sm-4">Usuario</dt><dd class="col-sm-8">{{ data.nombre }}</dd>
+          <dt class="col-sm-4">Correo</dt><dd class="col-sm-8">{{ data.correo }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
