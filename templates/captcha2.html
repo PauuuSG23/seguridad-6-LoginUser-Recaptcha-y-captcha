@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación CAPTCHA 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .captcha-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .captcha-question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .option-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+        .option-btn:hover {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+        .option-btn.selected {
+            border-color: #2196F3;
+            background: #2196F3;
+            color: white;
+        }
+        button[type="submit"] {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button[type="submit"]:hover {
+            background: #45a049;
+        }
+        button[type="submit"]:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #f44336;
+            margin: 10px 0;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+        .success {
+            color: #4CAF50;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+        .warning {
+            color: #ff9800;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 5px;
+        }
+        .info {
+            color: #2196F3;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="captcha-container">
+        <h2>Verificación de Seguridad</h2>
+        <p>Completa la secuencia lógica:</p>
+        
+        <div class="captcha-question">
+            <strong>{{ captcha_question }}</strong>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" id="captchaForm">
+            <!-- TOKEN CSRF AÑADIDO -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="captcha_id" value="{{ captcha_id }}">
+            <input type="hidden" name="answer" id="selectedAnswer">
+            
+            <div class="options">
+                {% for option in options %}
+                    <button type="button" class="option-btn" data-value="{{ option }}">
+                        {{ option }}
+                    </button>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" id="submitBtn" disabled>Verificar</button>
+        </form>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{{ url_for('dashboard') }}">← Volver al dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const optionBtns = document.querySelectorAll('.option-btn');
+            const selectedAnswer = document.getElementById('selectedAnswer');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            optionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove selected class from all buttons
+                    optionBtns.forEach(b => b.classList.remove('selected'));
+                    // Add selected class to clicked button
+                    this.classList.add('selected');
+                    // Set the selected value
+                    selectedAnswer.value = this.getAttribute('data-value');
+                    // Enable submit button
+                    submitBtn.disabled = false;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
