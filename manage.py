@@ -21,6 +21,7 @@ def main():
         print("=== Crear usuario inicial ===")
         username = input("Usuario (e.g., admin): ").strip().lower()
         email = input("Correo (e.g., admin@usta.edu.co): ").strip()
+        doc_id = input("Doc ID (dejar vacío para autogenerar): ").strip()
 
         # pedir contraseña 2 veces
         while True:
@@ -40,7 +41,10 @@ def main():
             return
 
         # crear
-        user = User(username=username, email=email, role="admin")
+        if not doc_id:
+            # generar doc_id basado en username (asegura unicidad si username es único)
+            doc_id = f"doc_{username}"
+        user = User(username=username, email=email, role="admin", doc_id=doc_id)
         user.set_password(pwd1)
         db.add(user)
         db.commit()

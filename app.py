@@ -6,6 +6,7 @@ import os  # para os.getenv, para leer variables de entorno
 import random
 import time
 from functools import wraps
+import logging
 
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy import create_engine
@@ -140,7 +141,14 @@ def captcha_required(captcha_number):
     def decorator(view_func):
         @wraps(view_func)
         def wrapped(*args, **kwargs):
-            if not session.get(f'captcha{captcha_number}_passed'):
+            key = f'captcha{captcha_number}_passed'
+            logger.debug("captcha_required check for key=%s (in session=%s)", key, key in session)
+            # mostrar claves actuales de session para depuración
+            try:
+                logger.debug("session snapshot: %s", {k: session.get(k) for k in session.keys()})
+            except Exception:
+                logger.exception("No se pudo serializar session para logging")
+            if not session.get(key):
                 flash(f"Debes completar el CAPTCHA {captcha_number} primero.", "warning")
                 return redirect(url_for(f'verify_captcha{captcha_number}'))
             return view_func(*args, **kwargs)
@@ -151,6 +159,9 @@ def captcha_required(captcha_number):
 load_dotenv()
 
 app = Flask(__name__)
+# configurar logging básico
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 # Configuración base
 app.config.update(
     SECRET_KEY=os.getenv("FLASK_SECRET_KEY", "dev_secret_change_me"),
@@ -381,8 +392,22 @@ def dashboard():
 @login_required
 @captcha_required(1)
 def perfil():
-    data = {"nombre": current_user.username, "correo": current_user.email}
-    return render_template("perfil.html", data=data)
+    db = SessionLocal()
+    try:
+        user = db.get(User, int(current_user.get_id()))
+        if not user:
+            flash("Usuario no encontrado.", "warning")
+            return redirect(url_for("login"))
+        data = {
+            "id": user.id,
+            "doc_id": getattr(user, 'doc_id', ''),
+            "username": user.username,
+            "email": user.email,
+            "role": user.role
+        }
+        return render_template("perfil.html", data=data)
+    finally:
+        db.close()
 
 @app.route("/reportes")
 @login_required
@@ -410,6 +435,27 @@ def logout():
 def cleanup_captchas_route():
     cleanup_old_captchas()
     return "CAPTCHAs expirados limpiados"
+
+
+@app.route('/_debug_session')
+def _debug_session():
+    """Endpoint de depuración que muestra el contenido actual de la sesión y cookies.
+    No dejar en producción."""
+    try:
+        session_data = {k: session.get(k) for k in session.keys()}
+    except Exception:
+        session_data = "<unserializable session>"
+
+    cookies = {k: request.cookies.get(k) for k in request.cookies.keys()}
+    info = {
+        'session': session_data,
+        'cookies': cookies,
+        'remote_addr': request.remote_addr,
+        'path': request.path
+    }
+    logger.debug("/_debug_session called: %s", info)
+    from flask import jsonify
+    return jsonify(info)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8095)

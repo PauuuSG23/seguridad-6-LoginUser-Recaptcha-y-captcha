@@ -6,10 +6,26 @@
     <div class="card shadow">
       <div class="card-body">
         <h3 class="mb-3">Perfil del usuario</h3>
-        <dl class="row">
-          <dt class="col-sm-4">Usuario</dt><dd class="col-sm-8">{{ data.nombre }}</dd>
-          <dt class="col-sm-4">Correo</dt><dd class="col-sm-8">{{ data.correo }}</dd>
-        </dl>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Doc ID</th>
+              <th>Usuario</th>
+              <th>Correo</th>
+              <th>Rol</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ data.id }}</td>
+              <td>{{ data.doc_id }}</td>
+              <td>{{ data.username }}</td>
+              <td>{{ data.email }}</td>
+              <td>{{ data.role }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
